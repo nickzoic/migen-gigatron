@@ -35,6 +35,9 @@ and built within the tree, or at least that's the idea.
 
     make -j$(nproc)
 
+    pip install -e migen/
 
+    PATH=$PWD/build/bin:$PATH 
 
+    python3 test.py
 
