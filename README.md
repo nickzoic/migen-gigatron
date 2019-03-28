@@ -24,7 +24,7 @@ if Woz had homebrewed something like this instead of the
 
 [Yeah, but in Verilog.](https://github.com/menloparkinnovation/menlo_gigatron)
 
-## Building
+## Building Tools
 
 Other than a bunch of Ubuntu packages, and some of the Python libraries, 
 everything is pulled in as submodules and built within the tree, or at least that's the idea.
@@ -38,46 +38,20 @@ everything is pulled in as submodules and built within the tree, or at least tha
 
     pip install -e migen/
     pip install tinyprog
+```
 
+## Building Gateware
+
+```
     PATH=$PWD/build/bin:$PATH 
-
     python3 test.py
 ```
 
 ## Programming
 
-### SystemD ModemManager
+First [make sure systemd modemmanager isn't messing with you](https://nick.zoic.org/art/failed-to-set-dtr-rts-systemd-modemmanager/) 
 
-First stop ModemManager messing with you.  If `tinyprog` crashes out part way through
-and/or you're getting `dmesg` error logs like: `cdc_acm 1-1:1.0: failed to set dtr/rts`
-then that's probably the problem.
-
-See https://askubuntu.com/questions/399263/udev-rules-seem-ignored-can-not-prevent-modem-manager-from-grabbing-device and then fume quietly to yourself for a while.
-
-Assuming you don't actually have any modems the easiest thing is just to tell ModemManager to leave `/dev/ttyACM*` alone:
-
-* Edit `/lib/systemd/system/ModemManager.service` and add to the `[Service]` section:
-```
-Environment="MM_FILTER_RULE_TTY_ACM_INTERFACE=0"
-```
-
-Otherwise you can add specific udev rules for this device and then remind systemd ModemManager to actually respect those rules:
-
-* Create `/etc/udev/rules.d/99-tinyfpga.rules` and add rule 
-```
-ATTR{idProduct}=="6130", ATTR{idVendor}=="1d50", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="666"
-```
-* sudo udevadm control --reload
-* Edit `/lib/systemd/system/ModemManager.service` and change `ExecStart=/usr/sbin/ModemManager --filter-policy=strict` to `ExecStart=/usr/sbin/ModemManager --filter-policy=default`
-
-Either way, reload the ModemManager configuration:
-
-```
-sudo systemctl daemon-reload
-sudo systemctl restart ModemManager
-```
-
-### Tinyprog
+Then you can run tinyprog to copy the gateway onto the FPGA.  Press the reset button and then:
 
 ```
     tinyprog -p build/test.bin
