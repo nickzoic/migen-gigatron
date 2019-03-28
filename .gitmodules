@@ -1,0 +1,12 @@
+[submodule "migen"]
+	path = migen
+	url = https://github.com/m-labs/migen
+[submodule "icestorm"]
+	path = icestorm
+	url = https://github.com/cliffordwolf/icestorm.git
+[submodule "nextpnr"]
+	path = nextpnr
+	url = https://github.com/YosysHQ/nextpnr
+[submodule "yosys"]
+	path = yosys
+	url = https://github.com/cliffordwolf/yosys.git

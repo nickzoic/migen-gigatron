@@ -24,6 +24,23 @@ if Woz had homebrewed something like this instead of the
 
 [Yeah, but in Verilog.](https://github.com/menloparkinnovation/menlo_gigatron)
 
+## Building
 
+Other than a bunch of Ubuntu packages, everything is pulled in as submodules
+and built within the tree, or at least that's the idea.  Eventually this should
+just have a master Makefile.
+
+    git submodule update --init --recursive
+
+    cat ubuntu-packages.txt | xargs sudo apt install -y
+
+    mkdir build
+
+    ( cd icestorm && make -j$(nproc) && make PREFIX=$PWD/../build install )
+
+    ( cd nextpnr && cmake -DARCH=ice40 -DCMAKE_INSTALL_PREFIX=$PWD/../build -DICEBOX_ROOT=$PWD/../build/share/icebox && make -j$(nproc) && make install )
+
+    ( cd yosys && make -j$(nproc) && make PREFIX=$PWD/../build install )
+    
 
 
