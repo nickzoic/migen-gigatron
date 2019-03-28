@@ -41,3 +41,20 @@ and built within the tree, or at least that's the idea.
 
     python3 test.py
 
+## Programming
+
+First stop ModemManager messing with you.  If `tinyprog` crashes out part way through
+and/or you're getting `dmesg` error logs like:
+```
+cdc_acm 1-1:1.0: failed to set dtr/rts
+```
+Then that's probably the problem.
+
+See https://askubuntu.com/questions/399263/udev-rules-seem-ignored-can-not-prevent-modem-manager-from-grabbing-device and then fume quietly to yourself for a while.
+
+* Add `ATTR{idProduct}=="6130", ATTR{idVendor}=="1d50", ENV{ID_MM_DEVICE_IGNORE}="1", MODE="666"` to udev rules
+* sudo udevadm control --reload
+* Edit `/lib/systemd/system/ModemManager.service` and either set `--filter-policy=default`
+  or set `Environment="MM_FILTER_RULE_TTY_ACM_INTERFACE=0"`
+* sudo systemctl daemon-reload
+* sudo systemctl restart ModemManager
