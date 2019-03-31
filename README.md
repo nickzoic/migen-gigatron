@@ -111,11 +111,12 @@ TinyFPGA BX board.
 For now, I'll set up two blocks of on-chip SRAM: one 8 bit x 8192 word read-write memory 
 for the RAM, and one 16 bit x 4096 word read-only memory for the ROM.
 
-Some documents seem to think that there's
-16 bit x 64Kword worth of "SPRAM" (Single Ported RAM) on the Ice40 devices.
-The toolchain seems to agree: I can declare in Migen a `migen.Memory(16, 65536)`
-and it compiles up, telling me I've used 100% of my RAM.
+(There's also bigger versions of the ICE40 with more RAM available, for example
+the "UltraPlus" parts like the ICE40-UP5K ... these have an extra
+16 bit x 64Kword worth of "SPRAM" (Single Ported RAM) which would be rather handy.
 Sadly that's still not quite enough for both RAM and ROM, but it's closer!
+
+### ROM Compression
 
 It's pretty obvious looking at it that the ROM is sparse: there's no "copy from ROM" 
 instruction so data has to get loaded in using `LD $XX` instructions.  To make it a 
@@ -125,4 +126,4 @@ bit clearer, here's a graphical representation of the ROM, with green pixels rep
 ![ROM Map](doc/rom_map.png)
 
 I'm thinking some kind of lookup table could pack these pages a bit more tightly in
-the internal RAM, thus scavenging back enough storage to fit in the actual RAM.
+the internal RAM, thus scavenging back some storage to fit in the actual RAM.
