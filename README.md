@@ -67,7 +67,8 @@ The Gigatron board is almost all logic, which can be fit into the FPGA gateware.
 I/O circuitry around the edges, eg: for the audio and video outputs, but that can be built
 on strip-board easily enough, with the TinyFPGA board fitting into headers.
 
-There are 41 user I/O pins available, and the Gigatron only needs 8 digital outputs for video,
+There are 24 user I/O pins easily available (and another 12 hidden underneath
+the module) and the Gigatron only needs 8 digital outputs for video,
 another 8 for blinkenlights and audio and a single input pin for the game controller (`SER_DATA`)
 
 Some of the pins and analogue circuitry could be dispensed with by adding in a PWM circuit for
