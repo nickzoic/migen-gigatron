@@ -82,7 +82,11 @@ Here we hit the first hurdle: the ICE40LP8K FPGA used on the TinyFPGA BX board h
 Ooops.  So our options are:
 
 1. Add an external static RAM to the project.
-2. Wait around for the TinyFPGA EX to be ready, which should have plenty of RAM.
+2. Wait around for the [TinyFPGA EX](https://discourse.tinyfpga.com/t/tinyfpga-ex-preview/103/10)
+   or the [FleaFPGA Ohm](http://www.fleasystems.com/fleaFPGA_Ohm.html)
+   to be ready, which should have plenty of RAM on board (both
+   [Lattice ECP5](https://www.latticesemi.com/Products/FPGAandCPLD/ECP5.aspx) which is supported
+   by the Open Source [SymbiFlow](https://symbiflow.github.io/) tool.
 3. Develop on a slightly *less* tiny platform, eg:
    [Artix A7](https://www.xilinx.com/products/silicon-devices/fpga/artix-7.html) or similar.
 4. Make a cut-down version of Gigatron for the moment.
@@ -94,7 +98,6 @@ methods 1 or 2 later.
 
 Option 3 would mean a whole different and non-Open Source toolchain,
 so I'm not keen on that.
-At least for now we can get the CPU sorted out with 16KByte of RAM addressable.
 
 ### ROM
 
@@ -111,15 +114,25 @@ TinyFPGA BX board.
 For now, I'll set up two blocks of on-chip SRAM: one 8 bit x 8192 word read-write memory 
 for the RAM, and one 16 bit x 4096 word read-only memory for the ROM.
 
-(There's also bigger versions of the ICE40 with more RAM available, for example
+At least for now we can get the CPU sorted out and hopefully get the
+[vCPU](http://www.iwriteiam.nl/PGigatron.html#vCPU) and maybe
+even [Gigatron BASIC](https://gigatron.io/?page_id=1234) working.
+
+With only 8K of RAM it's not going to be able to generate 160x120x6bit video though,
+that needs a lot more space!  Perhaps a boring UART/teletype interface will have to do.
+
+### ROM Compression
+
+There's also bigger versions of the ICE40 with more RAM available, for example
 the "UltraPlus" parts like the ICE40-UP5K ... these have an extra
 16 bit x 64Kword worth of "SPRAM" (Single Ported RAM) which would be rather handy.
 Sadly that's still not quite enough for both RAM and ROM, but it's closer!
 
-### ROM Compression
-
 It's pretty obvious looking at it that the ROM is sparse: there's no "copy from ROM" 
-instruction so data has to get loaded in using `LD $XX` instructions.  To make it a 
+instruction so data has to get loaded in using `LD $XX` instructions using 
+[a weird pipelining trick](https://hackaday.io/project/20781-gigatron-ttl-microcomputer/log/68954-pipelining-and-the-single-instruction-subroutine).
+
+To make it a 
 bit clearer, here's a graphical representation of the ROM, with green pixels representing
 "LD" instructions (opcode=0) and blue pixels representing zero words (opcode=0, data=0)
 
