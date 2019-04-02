@@ -14,6 +14,12 @@ plat.add_extension([
 output = plat.request("output")
 dinput = plat.request("input")
 
+# opcode and mode constants.
+
+OP_LD, OP_AND, OP_OR, OP_XOR, OP_ADD, OP_SUB, OP_ST, OP_BCC = range(0,8)
+MOD_DAC, MOD_XAC, MOD_YDAC, MOD_YXAC, MOD_DX, MOD_DY, MOD_DOUT, MOD_YXOUT = range(0,8)
+MOD_JMP, MOD_BGT, MOD_BLT, MOD_BNE, MOD_BEQ, MOD_BGE, MOD_BLE, MOD_BRA = range(0,8)
+
 with open("gigatron-rom/ROMv3.rom", "rb") as fh:
     rom_image = array.array("H", fh.read())
 
@@ -33,61 +39,61 @@ class Gigatron(Module):
         self.sync += program_counter.eq(program_counter + 1)
         self.comb += rom_port.adr.eq(program_counter)
 
+        accumulator = Signal(8)
+
         op_code = Signal(3)
         op_mode = Signal(3)
         op_bus = Signal(2)
         op_data = Signal(8)
         Cat(op_bus, op_mode, op_code, op_data).eq(rom_port.dat_r)
-      
-        inst_decode = Signal(7)
-        Case(op_code, {
-            0: inst_decode.eq(0),
-            1: inst_decode.eq(0),
-            2: inst_decode.eq(0),
-            3: inst_decode.eq(0),
-            4: inst_decode.eq(0),
-            5: inst_decode.eq(0),
-            6: inst_decode.eq(0),
-            7: inst_decode.eq(0),
-        })
-        sig_ar0 = Signal(1)
-        sig_ar1 = Signal(1)
-        sig_ar2 = Signal(1)
-        sig_ar3 = Signal(1)
-        sig_al = Signal(1)
-        sig_ld2 = Signal(1)
-        sig_ph1 = Signal(1)
-        Cat(sig_ar0, sig_ar1, sig_ar2, sig_ar3, sig_al, sig_ld2, sig_ph1).eq(inst_decode)
+     
+        sig_ar0 = Signal()
+        sig_ar0.eq((op_code == OP_SUB) | (op_code == OP_BCC))
+        sig_ar1 = Signal()
+        sig_ar1.eq((op_code == OP_OR) | (op_code == OP_XOR) | (op_code == OP_SUB))
+        sig_ar2 = Signal()
+        sig_ar2.eq((op_code == OP_LD) | (op_code == OP_OR) | (op_code == OP_XOR) | (op_code == OP_ADD) | (op_code == OP_BCC))
+        sig_ar3 = Signal()
+        sig_ar3.eq((op_code == OP_LD) | (op_code == OP_AND) | (op_code == OP_OR) | (op_code == OP_ADD))
+        sig_al = Signal()
+        sig_al.eq((op_code == OP_BCC) | (~op_code[2]))
 
-        mode_decode = Signal(7)
-        Case(op_mode, {
-            0: mode_decode.eq(0),
-            1: mode_decode.eq(0),
-            2: mode_decode.eq(0),
-            3: mode_decode.eq(0),
-            4: mode_decode.eq(0),
-            5: mode_decode.eq(0),
-            6: mode_decode.eq(0),
-            7: mode_decode.eq(0),
-        })
-        sig_xl = Signal(1)
-        sig_yl = Signal(1)
-        sig_ix = Signal(1)
-        sig_eh = Signal(1)
-        sig_el = Signal(1)
-        sig_ol1 = Signal(1)
-        sig_ld1 = Signal(1)
-        sig_ph2 = Signal(1)
-        Cat(sig_xl, sig_yl, sig_ix, sig_eh, sig_el, sig_ol1, sig_ld1, sig_ph2).eq(mode_decode)
+        sig_xl = Signal()
+        sig_xl.eq(op_mode != MOD_DX)
+        sig_yl = Signal()
+        sig_yl.eq(op_mode != MOD_DY)
+        sig_ix = Signal()
+        sig_ix.eq(op_mode == MOD_YXOUT) 
+        sig_eh = Signal()
+        sig_eh.eq((op_mode != MOD_YDAC) & (op_mode != MOD_YXAC) & (op_mode != MOD_YXOUT))
+        sig_el = Signal()
+        sig_el.eq((op_mode != MOD_XAC) & (op_mode != MOD_YXAC) & (op_mode != MOD_YXOUT))
+        
+        sig_ol = Signal()
+        sig_ol.eq(((op_mode != MOD_DOUT) & (op_mode != MOD_YXOUT)) | (op_code == OP_ST))
+        sig_ld = Signal()
+        sig_ld.eq(((op_mode != MOD_DAC) & (op_mode != MOD_XAC) & (op_mode != MOD_YDAC) & (op_mode != MOD_YXAC)) | (op_code == OP_ST))
 
-        sig_ld = Signal(1)
-        sig_ld.eq(sig_ld1 | sig_ld2)
+        # this isn't quite right, in the schematic it's all about AC7 and the
+        # carry-out of the ALU adder, hmmm.
 
-        sig_ph = Signal(1)
-        sig_ph.eq(sig_ph1 | sig_ph2)
+        sig_cond = Signal()
+        sig_cond.eq(
+                (op_mode == MOD_JMP) | (op_mode == MOD_BRA) |
+                ((op_mode == MOD_BNE) & (accumulator != 0)) |
+                ((op_mode == MOD_BEQ) & (accumulator == 0)) |
+                ((op_mode == MOD_BLT) & (accumulator < 0)) |
+                ((op_mode == MOD_BGT) & (accumulator > 0)) |
+                ((op_mode == MOD_BLE) & (accumulator <= 0)) |
+                ((op_mode == MOD_BGE) & (accumulator >= 0))
+        )
 
+        sig_ph = Signal()
+        sig_ph.eq((op_code == OP_BCC) & (op_mode == MOD_JMP))
+        sig_pl = Signal()
+        sig_pl.eq((op_code == OP_BCC) & sig_cond)
+        
         data_bus = Signal(8)
-        accumulator = Signal(8)
 
         Case(op_bus, {
             0: data_bus.eq(op_data),
